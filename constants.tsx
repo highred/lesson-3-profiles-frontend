@@ -1,0 +1,126 @@
+
+import React from 'react';
+import type { Step } from './types';
+import CodeBlock from './components/CodeBlock';
+import { DatabaseIcon } from './components/icons/DatabaseIcon';
+import { BrowserIcon } from './components/icons/BrowserIcon';
+import { RocketIcon } from './components/icons/RocketIcon';
+
+const createProfilesTableSql = `-- Create a table for public user profiles
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users NOT NULL PRIMARY KEY,
+  updated_at TIMESTAMPTZ,
+  username TEXT UNIQUE,
+  avatar_url TEXT,
+  website TEXT,
+
+  CONSTRAINT username_length CHECK (char_length(username) >= 3)
+);`;
+
+const rlsProfilesSql = `ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+
+-- Allow public access to profiles, anyone can see them.
+CREATE POLICY "Public profiles are viewable by everyone." ON profiles
+  FOR SELECT USING (true);
+
+-- Allow users to update their own profile.
+CREATE POLICY "Users can update their own profile." ON profiles
+  FOR UPDATE USING (auth.uid() = id);`;
+  
+const createTriggerFunctionSql = `-- This trigger automatically creates a profile for new users.
+CREATE FUNCTION public.handle_new_user()
+RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO public.profiles (id)
+  VALUES (new.id);
+  RETURN new;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;`;
+
+const createTriggerSql = `-- A trigger that calls our function upon user creation
+CREATE TRIGGER on_auth_user_created
+  AFTER INSERT ON auth.users
+  FOR EACH ROW EXECUTE PROCEDURE public.handle_new_user();`;
+
+const storagePoliciesSql = `CREATE POLICY "Avatar images are publicly accessible." ON storage.objects
+  FOR SELECT USING (bucket_id = 'avatars');
+
+CREATE POLICY "Anyone can upload an avatar." ON storage.objects
+  FOR INSERT WITH CHECK (bucket_id = 'avatars');
+
+CREATE POLICY "Users can update their own avatar." ON storage.objects
+  FOR UPDATE USING (auth.uid() = owner) WITH CHECK (bucket_id = 'avatars');
+`
+
+export const TUTORIAL_STEPS: Step[] = [
+  {
+    title: 'Part 1: The Database (Profiles & Triggers)',
+    icon: <DatabaseIcon />,
+    content: (
+      <div className="space-y-4">
+        <p>We'll create a new Supabase project and set up a public `profiles` table to store user data like usernames and avatars.</p>
+        <ol className="list-decimal list-inside space-y-3 pl-4">
+          <li>Create a **new** Supabase project. Name it something like <span className="font-semibold text-white">Lesson 3 Profiles App</span>.</li>
+          <li>Navigate to the <span className="font-semibold text-white">SQL Editor</span> and run the following query to create the `profiles` table.</li>
+        </ol>
+        <CodeBlock code={createProfilesTableSql} language="sql" />
+        <ol className="list-decimal list-inside space-y-3 pl-4" start={3}>
+            <li>Next, set up Row Level Security for the `profiles` table. We'll make profiles public but only allow users to edit their own. Run this in the SQL Editor.</li>
+        </ol>
+        <CodeBlock code={rlsProfilesSql} language="sql" />
+         <ol className="list-decimal list-inside space-y-3 pl-4" start={4}>
+          <li>
+            Now for some automation! We'll create a **database trigger**. This is a special function that will automatically create a profile for a user the moment they sign up. Run these next two scripts in the SQL Editor, one after the other.
+            <div className="p-3 my-2 rounded-lg bg-green-900/30 border border-green-500/50">
+                <p className="font-bold text-green-300">How it Works:</p>
+                <p className="text-green-200">The first script creates a function that inserts a new row into `public.profiles`. The second script creates a trigger that calls that function whenever a new row is added to `auth.users`.</p>
+            </div>
+          </li>
+        </ol>
+        <CodeBlock code={createTriggerFunctionSql} language="sql" />
+        <CodeBlock code={createTriggerSql} language="sql" />
+      </div>
+    ),
+  },
+  {
+    title: 'Part 2: File Storage (Avatars)',
+    icon: <DatabaseIcon />,
+    content: (
+        <div className="space-y-4">
+        <p>We'll use Supabase Storage to handle user avatar uploads. It's like a secure, scalable file cabinet for your app.</p>
+        <ol className="list-decimal list-inside space-y-3 pl-4">
+            <li>In your Supabase dashboard, go to the <span className="font-semibold text-white">Storage</span> section and click **"New bucket"**.</li>
+            <li>Name the bucket <code className="font-mono text-sm">avatars</code> and make it a **Public** bucket. Click **Create bucket**.</li>
+            <li>
+                Now, we need to secure it. Public buckets allow read access, but we need to define policies for who can upload, update, and delete files.
+                Navigate back to the <span className="font-semibold text-white">SQL Editor</span> and run this script to create the necessary storage policies.
+            </li>
+        </ol>
+        <CodeBlock code={storagePoliciesSql} language="sql" />
+      </div>
+    )
+  },
+   {
+    title: 'Part 3: Deploy Your Frontend',
+    icon: <RocketIcon />,
+    content: (
+      <div className="space-y-4">
+        <p>The frontend is now updated with an "Account" page for users to manage their profile and upload an avatar. Let's deploy it.</p>
+        <ol className="list-decimal list-inside space-y-3 pl-4">
+          <li>
+            Create a **new** GitHub repository. Name it something like <span className="font-semibold text-white">lesson-3-profiles-frontend</span>. Push your React project code to this new repository.
+          </li>
+          <li>
+            Sign in to <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="text-brand-primary hover:underline">Vercel</a> and create a **new** project, importing the new GitHub repo.
+          </li>
+          <li>In the project's <span className="font-semibold text-white">Settings &gt; Environment Variables</span>, add your new Supabase Project URL and anon key.</li>
+           <ul className="list-disc list-inside mt-2 pl-6 bg-base-300 p-3 rounded-md">
+                <li>Key: `VITE_SUPABASE_URL`, Value: Your **Lesson 3** Project URL.</li>
+                <li>Key: `VITE_SUPABASE_ANON_KEY`, Value: Your **Lesson 3** `anon` public key.</li>
+            </ul>
+          <li>Deploy! You now have an app with user profiles and avatars. Congratulations!</li>
+        </ol>
+      </div>
+    ),
+  },
+];
