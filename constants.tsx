@@ -79,26 +79,26 @@ export const TUTORIAL_STEPS: Step[] = [
     icon: <DatabaseIcon />,
     content: (
       <div className="space-y-4">
-        <p>For this lesson, we'll start with a new Supabase project. We need to set up both the `messages` table from Lesson 2 and our new `profiles` table.</p>
+        <p>For this lesson, we'll start with a new Supabase project. We need to set up our new `profiles` table first, and then the `messages` table from Lesson 2.</p>
         <ol className="list-decimal list-inside space-y-3 pl-4">
           <li>Create a **new** Supabase project. Name it something like <span className="font-semibold text-white">Lesson 3 Profiles App</span>.</li>
           <li>
-            Navigate to the <span className="font-semibold text-white">SQL Editor</span>. The first and most important step is to recreate the `messages` table from our previous lesson. The app will not work without it. Run this script.
+            Navigate to the <span className="font-semibold text-white">SQL Editor</span>. The first step is to create our new `profiles` table. This will store public user data like usernames and avatars. Run this script.
           </li>
         </ol>
-        <CodeBlock code={createMessagesTableSql} language="sql" />
-        <ol className="list-decimal list-inside space-y-3 pl-4" start={3}>
-            <li>Now, secure the `messages` table with the same Row Level Security policies from Lesson 2. Run this script.</li>
-        </ol>
-        <CodeBlock code={rlsMessagesSql} language="sql" />
-        <ol className="list-decimal list-inside space-y-3 pl-4" start={4}>
-            <li>With the `messages` table ready, run the following query to create our new `profiles` table. This will store public user data like usernames and avatars.</li>
-        </ol>
         <CodeBlock code={createProfilesTableSql} language="sql" />
-        <ol className="list-decimal list-inside space-y-3 pl-4" start={5}>
+        <ol className="list-decimal list-inside space-y-3 pl-4" start={3}>
             <li>Next, set up Row Level Security for the `profiles` table. We'll make profiles public but only allow users to edit their own. Run this in the SQL Editor.</li>
         </ol>
         <CodeBlock code={rlsProfilesSql} language="sql" />
+        <ol className="list-decimal list-inside space-y-3 pl-4" start={4}>
+            <li>With the `profiles` table ready, we can now create the `messages` table from Lesson 2. This version links to the `profiles` table. The app will not work without it. Run this script.</li>
+        </ol>
+        <CodeBlock code={createMessagesTableSql} language="sql" />
+        <ol className="list-decimal list-inside space-y-3 pl-4" start={5}>
+            <li>Now, secure the `messages` table with the same Row Level Security policies from Lesson 2. Run this script.</li>
+        </ol>
+        <CodeBlock code={rlsMessagesSql} language="sql" />
          <ol className="list-decimal list-inside space-y-3 pl-4" start={6}>
           <li>
             Now for some automation! We'll create a **database trigger**. This is a special function that will automatically create a profile for a user the moment they sign up. Run these next two scripts in the SQL Editor, one after the other.
