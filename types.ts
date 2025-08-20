@@ -88,15 +88,7 @@ export interface Database {
           website?: string | null
           role?: Role
         }
-        Relationships: [
-          {
-            foreignKeyName: "profiles_id_fkey"
-            columns: ["id"]
-            isOneToOne: true
-            referencedRelation: "users"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       equipment: {
         Row: {
@@ -156,15 +148,7 @@ export interface Database {
           notes_for_coordinator?: string | null
           status?: "upcoming" | "active" | "completed" | "staged"
         }
-        Relationships: [
-          {
-            foreignKeyName: "bookings_technician_id_fkey"
-            columns: ["technician_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       booking_items: {
         Row: {
@@ -179,22 +163,7 @@ export interface Database {
           booking_id?: number
           equipment_id?: number
         }
-        Relationships: [
-          {
-            foreignKeyName: "booking_items_booking_id_fkey"
-            columns: ["booking_id"]
-            isOneToOne: false
-            referencedRelation: "bookings"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "booking_items_equipment_id_fkey"
-            columns: ["equipment_id"]
-            isOneToOne: false
-            referencedRelation: "equipment"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
       messages: {
         Row: {
@@ -215,15 +184,7 @@ export interface Database {
           text?: string | null
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "messages_user_id_fkey"
-            columns: ["user_id"]
-            isOneToOne: false
-            referencedRelation: "profiles"
-            referencedColumns: ["id"]
-          }
-        ]
+        Relationships: []
       }
     }
     Views: {
