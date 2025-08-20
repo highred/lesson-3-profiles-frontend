@@ -1,5 +1,5 @@
 {
-  "name": "Lesson 3 Profiles & Avatars",
-  "description": "An interactive guide to building a secure, multi-user application with Supabase Authentication, Row Level Security, and React.",
+  "name": "Equipment Reservation System",
+  "description": "A system for technicians to reserve equipment for jobs, and for coordinators to manage logistics.",
   "requestFramePermissions": []
 }

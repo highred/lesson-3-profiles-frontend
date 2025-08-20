@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Session } from '@supabase/supabase-js';
@@ -17,6 +18,7 @@ const Account: React.FC<AccountProps> = ({ session, onBack }) => {
   useEffect(() => {
     let ignore = false;
     async function getProfile() {
+      if (!supabase) return;
       setLoading(true);
       const { user } = session;
 
@@ -48,6 +50,7 @@ const Account: React.FC<AccountProps> = ({ session, onBack }) => {
 
   async function updateProfile(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!supabase) return;
     setLoading(true);
     const { user } = session;
 

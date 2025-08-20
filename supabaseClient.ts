@@ -8,5 +8,5 @@ export const supabase: SupabaseClient<Database> | null =
   supabaseUrl && supabaseAnonKey ? createClient<Database>(supabaseUrl, supabaseAnonKey) : null;
 
 export const supabaseInitializationError: string | null = !supabase
-  ? "Supabase credentials are not configured in this environment. The live demo is disabled. Please follow Part 3 to deploy your own version with your credentials."
+  ? "Supabase credentials are not configured in this environment. To run this app, create a Supabase project and add your Project URL and anon key as VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY environment variables."
   : null;

@@ -2,86 +2,105 @@
 import React, { useState, useEffect } from 'react';
 import { Session } from '@supabase/supabase-js';
 import { supabase, supabaseInitializationError } from './supabaseClient';
-import { TUTORIAL_STEPS } from './constants';
-import { Step } from './types';
-import StepCard from './components/StepCard';
+import { Profile } from './types';
 import Auth from './components/Auth';
-import UserDashboard from './components/UserDashboard';
-import Account from './components/Account';
-
-type View = 'dashboard' | 'account';
+import Layout from './components/Layout';
+import SetupGuide from './components/SetupGuide';
 
 const App: React.FC = () => {
   const [session, setSession] = useState<Session | null>(null);
-  const [view, setView] = useState<View>('dashboard');
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (supabase) {
       supabase.auth.getSession().then(({ data: { session } }) => {
         setSession(session);
+        setLoading(false);
       });
 
       const {
         data: { subscription },
       } = supabase.auth.onAuthStateChange((_event, session) => {
         setSession(session);
-        // Reset to dashboard view on auth change (login/logout)
-        setView('dashboard');
       });
 
       return () => subscription.unsubscribe();
+    } else {
+        setLoading(false);
     }
   }, []);
 
-  const renderActiveView = () => {
-    if (!session) return null;
-    switch (view) {
-      case 'account':
-        return <Account key={session.user.id} session={session} onBack={() => setView('dashboard')} />;
-      case 'dashboard':
-      default:
-        return <UserDashboard key={session.user.id} session={session} onAccountClick={() => setView('account')} />;
+  useEffect(() => {
+    let ignore = false;
+    async function getProfile() {
+      if (session && supabase) {
+        setLoading(true);
+        const { user } = session;
+        const { data, error } = await supabase
+          .from('profiles')
+          .select()
+          .eq('id', user.id)
+          .single();
+
+        if (!ignore) {
+          if (error) {
+            console.warn(error);
+          } else if (data) {
+            setProfile(data);
+          }
+        }
+        setLoading(false);
+      } else {
+        setProfile(null);
+      }
     }
+    
+    getProfile();
+
+    return () => {
+      ignore = true;
+    }
+  }, [session]);
+
+  const renderContent = () => {
+    if (supabaseInitializationError) {
+      return (
+        <div className="text-center p-4 bg-yellow-900/30 border border-yellow-500/50 rounded-md max-w-2xl mx-auto">
+            <p className="font-bold text-yellow-300">Demo Disabled</p>
+            <p className="text-yellow-200">{supabaseInitializationError}</p>
+        </div>
+      );
+    }
+    if (!session) {
+        return <Auth />;
+    }
+    if (loading) {
+        return <div className="text-center">Loading user profile...</div>;
+    }
+    if (!profile) {
+        return <div className="text-center text-yellow-300">Could not load user profile. It may not have been created yet. Please wait a moment and refresh.</div>
+    }
+    return <Layout key={session.user.id} session={session} profile={profile} />
   }
 
   return (
     <div className="min-h-screen bg-base-100 text-content font-sans antialiased">
-      <main className="container mx-auto px-4 py-8 md:py-16">
+      <main className="container mx-auto px-4 py-8">
         <header className="text-center mb-12">
           <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
-            Lesson 3: Building User Profiles & Avatars
+            Equipment Reservation System
           </h1>
-          <p className="text-lg md:text-xl text-gray-400 max-w-3xl mx-auto">
-            This lesson teaches you how to manage public user profiles and handle file uploads with Supabase Storage.
-          </p>
         </header>
 
-        <div className="space-y-8">
-          {TUTORIAL_STEPS.map((step: Step, index: number) => (
-            <StepCard key={index} step={step} number={index + 1} />
-          ))}
-        </div>
-        
-        <section className="mt-16 bg-base-200 p-8 rounded-xl shadow-lg border border-base-300">
-            <h2 className="text-3xl font-bold text-white text-center mb-2">
-              Live Application Demo
-            </h2>
-            <p className="text-center text-gray-400 mb-6">
-              Sign up or sign in to create your profile and post messages.
-            </p>
-            {supabaseInitializationError ? (
-                <div className="text-center p-4 bg-yellow-900/30 border border-yellow-500/50 rounded-md">
-                    <p className="font-bold text-yellow-300">Demo Disabled</p>
-                    <p className="text-yellow-200">{supabaseInitializationError}</p>
-                </div>
-              ) : (
-                !session ? <Auth /> : renderActiveView()
-              )}
+        <section className="mt-8 bg-base-200 p-4 sm:p-8 rounded-xl shadow-lg border border-base-300">
+            {renderContent()}
         </section>
+        
+        {session && <SetupGuide />}
 
         <footer className="text-center mt-16 text-gray-500">
             <p>Built with React, TypeScript, Supabase, and Tailwind CSS.</p>
-            <p>You've got this! Happy coding!</p>
         </footer>
       </main>
     </div>

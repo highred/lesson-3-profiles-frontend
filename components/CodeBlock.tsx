@@ -27,7 +27,7 @@ const CodeBlock: React.FC<CodeBlockProps> = ({ code, language }) => {
       >
         {isCopied ? <CheckIcon /> : <CopyIcon />}
       </button>
-      <pre className="p-4 overflow-x-auto text-sm">
+      <pre className="p-4 overflow-x-auto text-sm text-content">
         <code className={`language-${language}`}>{code}</code>
       </pre>
     </div>
